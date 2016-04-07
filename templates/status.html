@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>YouBike Status</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		<script src="https://code.essoduke.org/js/tinyMap/jquery.tinyMap-3.3.11.js"></script>
+		<script src="https://code.highcharts.com"></script>
+		<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+		body {
+			position: relative;
+		}
+			#section1 {padding:50px;height:500px; background-color: #186078;}
+			#section2 {padding-top:50px; background-color: #ffffff;}
+
+		.map {
+			width: 100%;
+			height: 400px;
+		}
+
+		</style>
+		<script type="text/javascript">
+
+		</script>
+	</head>
+
+	<body data-spy="scroll" data-target=".navbar" data-offset="50">
+		<nav class="navbar navbar-inverse navbar-fixed-top">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#">YouBike</a>
+					<span class="glyphicons glyphicons-bicycle"></span>
+				</div>
+				<div>
+					<div class="collapse navbar-collapse" id="myNavbar">
+						<ul class="nav navbar-nav">
+							<li><a href="#section1">Station Map</a></li>
+							<li><a href="#section2">Station List</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</nav>
+		<div id="section1" class="container-fluid">
+			<div>
+				<div class="container">
+					<div class="map"></div>
+				</div>
+			</div>
+
+		</div>
+		<div id="section2" class="container-fluid">
+			<div class="container">
+				<h2>Station List</h2>
+				<p>Last update time: {{ date }} {{ time }}</p>
+				<table class="table table-striped" id="info_table">
+					<thead>
+						<tr>
+							<th>Area</th>
+							<th>Rent Point</th>
+							<th>Status</th>
+							<th>Bike Available</th>
+							<th>Space Available</th>
+						</tr>
+					</thead>
+					<tbody id="info_table_body">
+						{% for station in stations %}
+						<tr>
+							<td>{{ station.sarea }}</a></td>
+							<td><a href="#" data-toggle="modal" data-target="#dm{{ station.sno }}">{{ station.sna }}</a></td>
+							<td>
+								{% if station.sbi > station.bemp %}
+								<div class="progress">
+									<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:80%">
+									{{ station.sbi}}/{{ station.tot }}
+									</div>
+								</div>
+								{% elif station.sbi <= station.bemp %}
+									<div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
+									{{ station.sbi}}/{{ station.tot }}
+									</div>
+								{% endif %}
+							</td>
+							<td>{{ station.sbi }}</td>
+							<td>{{ station.bemp }}</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+				<!-- Modal -->
+				{% for station in stations %}
+				<div class="modal fade" id="dm{{ station.sno }}" role="dialog">
+					<div class="modal-dialog modal-lg">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal">&times;</button>
+								<h4 class="modal-title">Details</h4>
+							</div>
+							<div class="modal-body">
+								<div>
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Area</th>
+												<th>Address</th>
+												<th>Total space</th>
+												<th>Status</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>
+													{{ station.sarea }}</br>
+													{{ station.sareaen }}
+												</td>
+												<td>
+													{{ station.ar }}</br>
+													{{ station.aren }}
+												</td>
+												<td>{{ station.tot }}</td>
+												<td>
+														{% if station.act %}
+															<span class="halflings halflings-ok"></span>Available
+														{% else %}
+															<span class="glyphicons glyphicons-remove-2"></span>Closed
+														{% endif %}
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+		<!--map-->
+		<script type="text/javascript">
+			var map = $('.map');
+			map.tinyMap({
+				'center'		: '捷運忠孝復興站',
+				'zoom'			: 15,
+				'autoLocation': function (loc) {
+					map.tinyMap('modify', {
+						'marker': [
+							{'addr': [loc.coords.latitude, loc.coords.longitude], 'text': '<strong>目前位置</strong>', 'icon': 'https://code.essoduke.org/images/4.png', 'newLabel': '目前位置'},
+							{% for station in stations %}
+							{'addr': [{{ station.lat }}, {{ station.lng }}],'text': '{{ station.sna }}</br>可借車輛 : {{ station.sbi }}</br>可停空位 : {{ station.bemp }}'},
+							{% endfor %}
+						]
+					});
+				}
+			});
+		</script>
+	</body>
+</html>
